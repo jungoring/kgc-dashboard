@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>에브리타임 밸런스 마케팅 인포그래픽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: "Energetic & Playful" (Blue: #2563eb, Coral: #f43f5e, Emerald: #10b981) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-node {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #2563eb;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <!-- 
+        [Analysis Plan]
+        - Narrative: Title -> Core KPIs -> Deep Dive (Demographics, Regional, Sentiment) -> Future Opportunity -> Strategy.
+        - Objective: Show how the renewal successfully captured 2030s but faces regional/packaging issues.
+    -->
+
+    <!-- 
+        [Visualization Guide]
+        1. KPI Overview: Single Big Numbers (HTML/Tailwind).
+        2. Age Demographics: Donut Chart (Chart.js) -> Composition.
+        3. Regional Gap: Bar Chart (Chart.js) -> Category Comparison.
+        4. Customer VOC: Pie Chart (Chart.js) -> Sentiment Breakdown.
+        5. Keyword Trend: Radar Chart (Chart.js) -> Multi-variable Strength.
+        * NO SVG / NO MERMAID JS USED. 
+    -->
+
+    <div class="max-w-6xl mx-auto space-y-12">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between border-b-2 border-slate-200 pb-8 gap-4">
+            <div>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">주간 마케팅 통찰 <span class="text-blue-600">리포트</span></h1>
+                <p class="text-slate-500 text-lg mt-2">정관장 에브리타임 밸런스 리뉴얼 성과 분석 (2026.03.W4)</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <p class="text-sm font-bold text-slate-400">REPORTED BY</p>
+                    <p class="text-slate-800 font-semibold">브랜드전략실 마케팅 팀장</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span class="text-blue-600 font-black">KGC</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: KPI Overview -->
+        <section>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 metric-card border-t-8 border-blue-600">
+                    <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">2030 구매 비중</p>
+                    <h2 class="text-5xl font-black text-slate-800 mt-2">45%</h2>
+                    <p class="text-blue-600 font-bold mt-2 text-sm">타겟 고객군 유입 가시화</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 metric-card border-t-8 border-emerald-500">
+                    <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">수도권 CVS 성장</p>
+                    <h2 class="text-5xl font-black text-slate-800 mt-2">+15%</h2>
+                    <p class="text-emerald-600 font-bold mt-2 text-sm">오피스 권역 편의점 견인</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 metric-card border-t-8 border-rose-500">
+                    <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">아웃도어 키워드</p>
+                    <h2 class="text-5xl font-black text-slate-800 mt-2">30%</h2>
+                    <p class="text-rose-600 font-bold mt-2 text-sm">신규 TPO 확산 신호</p>
+                </div>
+            </div>
+            <div class="mt-8 bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-2xl">
+                <p class="text-blue-900 font-semibold leading-relaxed">
+                    리뉴얼의 핵심 기획 의도였던 '맛의 개선'과 '감각적 패키지'가 2030 사회초년생의 니즈와 정확히 부합하며 시장에 연착륙하고 있습니다. 특히 수도권 편의점 채널의 15% 성장은 일상적 피로 회복용 구매가 데일리 루틴화되고 있음을 보여줍니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: Detailed Analysis Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Age Distribution -->
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
+                <div class="mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-800">구매 고객 인구 통계</h3>
+                    <p class="text-slate-500 text-sm mt-1">리뉴얼 이후 젊은 세대 비중이 급증하며 브랜드 노후화 이미지 탈피</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ageDemographics"></canvas>
+                </div>
+            </div>
+
+            <!-- Regional Sales Gap -->
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
+                <div class="mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-800">채널/지역별 판매 격차</h3>
+                    <p class="text-slate-500 text-sm mt-1">수도권 편의점의 폭발적 성장 대비 지방 마트의 정체 현상 발생</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="regionalSales"></canvas>
+                </div>
+            </div>
+
+            <!-- Customer VOC -->
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
+                <div class="mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-800">고객 경험(VOC) 심리 분석</h3>
+                    <p class="text-slate-500 text-sm mt-1">디자인과 맛에 대한 만족은 높으나, 가격 인식과 패키지 품질 개선 필요</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="vocSentiment"></canvas>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">#세련된패키지</span>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">#덜쓴맛</span>
+                    <span class="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">#가격인상체감</span>
+                    <span class="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">#박스개봉뻑뻑함</span>
+                </div>
+            </div>
+
+            <!-- Athleisure Trend -->
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-50">
+                <div class="mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-800">Athleisure TPO 발견</h3>
+                    <p class="text-slate-500 text-sm mt-1">단순 건강 보조를 넘어 '액티브한 삶을 위한 부스터'로 인식 확장</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="keywordRadar"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Section 3: Strategic Action Roadmap (No SVG/Mermaid) -->
+        <section class="bg-slate-900 rounded-[3rem] p-10 md:p-16 text-white overflow-hidden relative">
+            <div class="relative z-10">
+                <h2 class="text-3xl font-black mb-12">전략적 제언 <span class="text-blue-400">Action Items</span></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <!-- Short-term -->
+                    <div class="space-y-8">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-blue-600 px-4 py-1 rounded-full text-xs font-black">SHORT-TERM</span>
+                            <span class="text-slate-400 font-bold">고객 경험 및 프로모션</span>
+                        </div>
+                        <div class="relative pl-10 border-l-2 border-blue-600/30 space-y-10">
+                            <div class="relative">
+                                <div class="absolute -left-[51px] step-node">01</div>
+                                <h4 class="text-lg font-bold">CX 개선: 패키지 공정 점검</h4>
+                                <p class="text-slate-400 text-sm mt-1 leading-relaxed">선물용 비중이 높은 점을 고려, 박스 개봉 편의성을 높이는 'Easy-Open' 구조 도입 및 현 공정 즉각 점검 실시.</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[51px] step-node">02</div>
+                                <h4 class="text-lg font-bold">CVS 거점별 타겟 마케팅</h4>
+                                <p class="text-slate-400 text-sm mt-1 leading-relaxed">사회초년생 유입이 활발한 월요일/금요일, 수도권 오피스 권역 편의점 대상의 시음 및 2+1 프로모션 강화.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mid-term -->
+                    <div class="space-y-8">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-emerald-600 px-4 py-1 rounded-full text-xs font-black">MID-TERM</span>
+                            <span class="text-slate-400 font-bold">브랜드 포지셔닝 확장</span>
+                        </div>
+                        <div class="relative pl-10 border-l-2 border-emerald-600/30 space-y-10">
+                            <div class="relative">
+                                <div class="absolute -left-[51px] step-node bg-emerald-600">03</div>
+                                <h4 class="text-lg font-bold">아웃도어 TPO 캠페인 전개</h4>
+                                <p class="text-slate-400 text-sm mt-1 leading-relaxed">'등산/테니스 전 필수 템'으로 포지셔닝하기 위해 스포츠 브랜드와의 협업 및 등산로 입구 팝업 스토어 기획.</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[51px] step-node bg-emerald-600">04</div>
+                                <h4 class="text-lg font-bold">지방/마트 채널 Value-up</h4>
+                                <p class="text-slate-400 text-sm mt-1 leading-relaxed">가격 저항이 높은 대형마트 채널을 위해 리뉴얼된 성분과 맛의 가치를 강조하는 체험형 VMD 및 시음 마케팅 강화.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Background Decoration -->
+            <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
+        </section>
+
+        <footer class="text-center py-10 text-slate-400 text-sm font-medium">
+            &copy; 2026 KGC 브랜드전략실 마케팅팀. 본 리포트는 내부 기밀 정보가 포함되어 있습니다.
+        </footer>
+    </div>
+
+    <script>
+        // Label wrapping logic for Chart.js
+        function wrapLabel(label) {
+            if (typeof label !== 'string') return label;
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const result = [];
+            let currentLine = '';
+            words.forEach(word => {
+                if ((currentLine + word).length > 16) {
+                    result.push(currentLine.trim());
+                    currentLine = word + ' ';
+                } else {
+                    currentLine += word + ' ';
+                }
+            });
+            result.push(currentLine.trim());
+            return result;
+        }
+
+        // Common Tooltip Config
+        const tooltipConfig = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                              return label.join(' ');
+                            } else {
+                              return label;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // 1. Age Demographics - Donut Chart
+        new Chart(document.getElementById('ageDemographics'), {
+            type: 'doughnut',
+            data: {
+                labels: ['2030 사회초년생', '4050 기성세대', '기타 세대'],
+                datasets: [{
+                    data: [45, 35, 20],
+                    backgroundColor: ['#2563eb', '#cbd5e1', '#f1f5f9'],
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '75%',
+                ...tooltipConfig,
+                plugins: {
+                    ...tooltipConfig.plugins,
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // 2. Regional Sales Gap - Bar Chart
+        new Chart(document.getElementById('regionalSales'), {
+            type: 'bar',
+            data: {
+                labels: ['수도권/편의점', '지방/대형마트'],
+                datasets: [{
+                    label: '전주 대비 변화율 (%)',
+                    data: [15, -2],
+                    backgroundColor: ['#2563eb', '#f43f5e'],
+                    borderRadius: 12
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                ...tooltipConfig,
+                scales: {
+                    y: { grid: { display: false }, beginAtZero: true },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 3. Customer VOC Sentiment - Pie Chart
+        new Chart(document.getElementById('vocSentiment'), {
+            type: 'pie',
+            data: {
+                labels: ['긍정 (맛/디자인)', '부정 (가격/포장)', '중립/기타'],
+                datasets: [{
+                    data: [65, 25, 10],
+                    backgroundColor: ['#10b981', '#f43f5e', '#94a3b8'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                ...tooltipConfig,
+                plugins: {
+                    ...tooltipConfig.plugins,
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // 4. Athleisure Trend - Radar Chart
+        new Chart(document.getElementById('keywordRadar'), {
+            type: 'radar',
+            data: {
+                labels: ['피로 회복', '선물용 지수', wrapLabel('야외 활동/스포츠 (등산/테니스)'), '데일리 루틴', '자기 관리'],
+                datasets: [{
+                    label: '언급량 강도',
+                    data: [85, 90, 95, 80, 88],
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    pointBackgroundColor: '#2563eb'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                ...tooltipConfig,
+                scales: {
+                    r: {
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
