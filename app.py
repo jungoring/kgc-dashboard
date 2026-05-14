@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import urllib.parse
+import time  # 로딩 효과를 위해 추가
 
 # 1. 페이지 설정
 st.set_page_config(page_title="KGC 주간 마케팅 대시보드", layout="wide")
@@ -23,18 +24,23 @@ try:
     
     # [데이터 추출] A7(Row 7) -> AI 분석 / A9(Row 9) -> 팀장의 한마디
     # pandas iloc은 0부터 시작, 헤더 제외 기준: 인덱스 5=7행, 7=9행
-    ai_analysis = raw_df.iloc[5, 0] if len(raw_df) > 5 else "AI 분석 데이터가 없습니다."
-    leader_word = raw_df.iloc[7, 0] if len(raw_df) > 7 else "오늘의 한마디가 없습니다."
+    # 사용자의 요청에 따라 A7은 AI 분석, A9는 팀장의 한마디로 확실히 고정
+    ai_analysis_data = raw_df.iloc[5, 0] if len(raw_df) > 5 else "AI 분석 데이터가 없습니다."
+    team_lead_word_data = raw_df.iloc[7, 0] if len(raw_df) > 7 else "오늘의 한마디가 없습니다."
 
-    # --- 상단 레이아웃 (타이틀 & 우측 상단 AI 분석) ---
-    head_col1, head_col2 = st.columns([0.6, 0.4])
+    # --- 상단 레이아웃 (타이틀 & 우측 상단 AI 요약 버튼) ---
+    head_col1, head_col2 = st.columns([0.7, 0.3])
     
     with head_col1:
         st.title("🚩 KGC 주간 통찰 리포트")
     
     with head_col2:
         st.write("") # 높이 맞춤용
-        st.info(f"🤖 **AI 분석:** {ai_analysis}")
+        # [기능 개선] 버튼 클릭 시 로딩 후 데이터 노출
+        if st.button("✨ AI 요약보기", use_container_width=True):
+            with st.spinner('AI가 데이터를 분석 중입니다...'):
+                time.sleep(1) # 1초 로딩 효과
+                st.info(f"🤖 **AI 상세 분석 (A7):** {ai_analysis_data}")
 
     # --- 데이터 전처리 (KPI용) ---
     df = raw_df.copy()
@@ -67,22 +73,20 @@ try:
         st.subheader("📋 실시간 데이터 테이블")
         st.dataframe(kpi_df[['label', 'value', 'delta']], use_container_width=True)
 
-    st.write("") # 간격 조절
-
-    # --- [핵심 추가] 중앙 하단 팀장의 한마디 ---
+    # --- [핵심 수정] 중앙 하단 팀장의 한마디 (A9) ---
     st.divider()
-    container = st.container()
-    with container:
-        st.markdown(
-            f"""
-            <div style="background-color: #f0f2f6; padding: 25px; border-radius: 15px; border-left: 5px solid #ff4b4b; text-align: center;">
-                <h3 style="margin-top: 0; color: #31333F;">💬 팀장의 한마디 (A9)</h3>
-                <p style="font-size: 1.2rem; color: #1f1f1f; font-weight: 500;">"{leader_word}"</p>
-            </div>
-            """, 
-            unsafe_allow_stdio=True, # LaTeX/HTML 렌더링용
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        f"""
+        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 20px; border: 2px solid #ff4b4b; text-align: center; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #ff4b4b;">💬 팀장의 한마디 (A9)</h3>
+            <p style="font-size: 1.4rem; color: #262730; font-weight: bold; line-height: 1.6;">
+                "{team_lead_word_data}"
+            </p>
+        </div>
+        """, 
+        unsafe_allow_html=True # 에러 났던 부분 수정 완료
+    )
 
 except Exception as e:
     st.error(f"⚠️ 데이터를 불러오는데 실패했습니다: {e}")
+    st.info("시트의 A7(7행)과 A9(9행)에 텍스트가 제대로 입력되어 있는지 확인해 봐!")
