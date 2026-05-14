@@ -9,7 +9,7 @@ st.markdown('<script src="https://cdn.tailwindcss.com"></script>', unsafe_allow_
 # 2. 데이터 불러오기 함수
 SHEET_ID = "1plSSNWnj1PZSZdhFXqukpJGtmUu2JtrLsxSjp8KV5Cw"
 SHEET_NAME = "준영데이터260514"
-url = f"https://docs.google.com/spreadsheets/d/{1plSSNWnj1PZSZdhFXqukpJGtmUu2JtrLsxSjp8KV5Cw}/gviz/tq?tqx=out:csv&sheet={준영데이터260514}"
+url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
 
 @st.cache_data(ttl=60)
 def load_data():
