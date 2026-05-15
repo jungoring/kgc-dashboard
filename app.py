@@ -1,88 +1,89 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import urllib.parse
+import numpy as np
+import matplotlib.pyplot as plt
+import koreanize_matplotlib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 import time
 
-# 1. 페이지 설정
-st.set_page_config(page_title="KGC 주간 마케팅 대시보드", layout="wide")
+# --- 1. 환경 설정 ---
+st.set_page_config(page_title="서울 대기질 관제 시스템", layout="wide")
+plt.style.use("ggplot")
 
-# 2. 데이터 불러오기 설정
-SHEET_ID = "1plSSNWnj1PZSZdhFXqukpJGtmUu2JtrLsxSjp8KV5Cw"
-SHEET_NAME = "KPI" 
+# --- 2. 데이터 처리 함수 ---
+@st.cache_data
+def get_processed_data():
+    # 파일 경로는 로컬에 맞게 수정 (예: 'seoul micro dust.csv')
+    df = pd.read_csv("seoul micro dust.csv", encoding='cp949')
+    df.columns = ['timestamp', 'district', 'pm10', 'pm25']
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['hour'] = df['timestamp'].dt.hour
+    df['day_of_week'] = df['timestamp'].dt.dayofweek
+    df['pm_ratio'] = df['pm25'] / df['pm10']
+    df['warning_flag'] = (df['pm10'] > 80).astype(int)
+    return df
 
-encoded_sheet_name = urllib.parse.quote(SHEET_NAME)
-url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
+def calc_cpk(group):
+    mean, std = group["pm10"].mean(), group["pm10"].std()
+    if std == 0 or np.isnan(std): return 0.0
+    usl, lsl = 80, 0
+    return round(min((usl - mean) / (3 * std), (mean - lsl) / (3 * std)), 3)
 
-@st.cache_data(ttl=60)
-def load_raw_data():
-    # pandas는 기본적으로 빈 행을 skip하므로 이를 고려한 인덱싱이 필요함
-    return pd.read_csv(url)
+# --- 3. 모델 학습 함수 ---
+@st.cache_resource
+def train_model(df):
+    model_cols = ["pm25", "hour", "day_of_week", "pm_ratio"]
+    clean_df = df.dropna(subset=model_cols + ["warning_flag"])
+    X = clean_df[model_cols]
+    y = clean_df["warning_flag"]
+    model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+    model.fit(X, y)
+    return model, model_cols
 
-# --- 메인 실행부 ---
+# --- 4. 메인 실행 로직 ---
 try:
-    raw_df = load_raw_data()
-    
-    # [검증된 데이터 추출] 
-    # Index 0~3: KPI 지표들 (Row 2~5)
-    # Index 4: AI 분석 내용 (Row 7 - '수도권 판매량이...')
-    # Index 5: 팀장의 한마디 (Row 9 - '쌉가능!...')
-    ai_analysis_data = raw_df.iloc[4, 0] if len(raw_df) > 4 else "데이터 로딩 실패"
-    team_lead_word_data = raw_df.iloc[5, 0] if len(raw_df) > 5 else "데이터 로딩 실패"
+    df = get_processed_data()
+    model, model_cols = train_model(df)
 
-    # --- 상단 레이아웃 (타이틀 & 우측 상단 AI 요약 버튼) ---
-    head_col1, head_col2 = st.columns([0.7, 0.3])
-    
-    with head_col1:
-        st.title("🚩 KGC 주간 통찰 리포트")
-    
-    with head_col2:
-        st.write("") # 여백
-        # [요청사항] 버튼 클릭 시 1초 로딩 효과 후 A7 내용 노출
-        if st.button("✨ AI 요약보기", use_container_width=True):
-            with st.spinner('AI가 리포트를 분석 중입니다...'):
-                time.sleep(1) # 1초 로딩 연출
-                st.info(f"🤖 **AI 상세 분석 (A7):** {ai_analysis_data}")
+    st.sidebar.title("⚙️ 설정")
+    selected_district = st.sidebar.selectbox("분석 대상 구", df['district'].unique())
 
-    # --- KPI 카드 섹션 ---
-    kpi_df = raw_df.head(4).copy()
-    kpi_df['value_clean'] = pd.to_numeric(kpi_df['value'].astype(str).str.replace('%', ''), errors='coerce')
+    tab1, tab2, tab3 = st.tabs(["📊 통계 분석", "📈 관리도", "📡 실시간 관제 시뮬레이션"])
 
-    cols = st.columns(len(kpi_df))
-    for i, (idx, row) in enumerate(kpi_df.iterrows()):
-        with cols[i]:
-            unit = "%" if "비율" in str(row['label']) or "타겟층" in str(row['label']) else ""
-            st.metric(
-                label=row['label'],
-                value=f"{row['value_clean']}{unit}",
-                delta=row['delta']
-            )
+    with tab1:
+        st.subheader("구별 대기질 관리 능력 (Cpk) 및 경고 비율")
+        cpk_df = df.groupby("district").apply(calc_cpk).reset_index(name="cpk")
+        warn_df = df.groupby("district")['warning_flag'].mean().reset_index(name="ratio")
+        summary = pd.merge(cpk_df, warn_df, on="district").sort_values("cpk")
+        st.dataframe(summary.style.background_gradient(cmap='RdYlGn_r', subset=['cpk']))
 
-    st.divider()
+    with tab2:
+        st.subheader(f"[{selected_district}] 미세먼지 관리도")
+        chart_df = df[df['district'] == selected_district].sort_values('timestamp').tail(200)
+        mean_v, std_v = chart_df['pm10'].mean(), chart_df['pm10'].std()
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.plot(chart_df['timestamp'], chart_df['pm10'], marker='o', markersize=2)
+        ax.axhline(mean_v, color='g', linestyle='--', label='평균')
+        ax.axhline(mean_v + 3*std_v, color='r', linestyle='--', label='UCL')
+        ax.legend()
+        st.pyplot(fig)
 
-    # --- 중앙 차트 및 원본 데이터 섹션 ---
-    col_left, col_right = st.columns([1, 1])
-    with col_left:
-        st.subheader("📊 주요 지표 비교")
-        fig = px.bar(kpi_df, x='label', y='value_clean', color='label', text_auto=True)
-        fig.update_layout(showlegend=False, xaxis_title=None, yaxis_title="수치")
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col_right:
-        st.subheader("📋 실시간 데이터 테이블")
-        st.dataframe(kpi_df[['label', 'value', 'delta']], use_container_width=True)
-
-    # --- [요청사항] 중앙 하단 팀장의 한마디 (A9) ---
-    st.divider()
-    st.markdown(
-        f"""
-        <div style="background-color: #fff5f5; padding: 30px; border-radius: 15px; border: 2px solid #ff4b4b; text-align: center; margin-top: 20px;">
-            <h3 style="color: #ff4b4b; margin-top: 0;">💬 팀장의 한마디 (A9)</h3>
-            <p style="font-size: 1.4rem; font-weight: bold; color: #1f1f1f;">"{team_lead_word_data}"</p>
-        </div>
-        """, 
-        unsafe_allow_html=True # HTML 렌더링 에러 수정 완료
-    )
+    with tab3:
+        st.subheader("24시간 가상 시나리오 관제")
+        if st.button("시뮬레이션 시작"):
+            status_area = st.empty()
+            log_area = st.container()
+            for h in range(24):
+                # 가상 데이터 생성 로직 (생략 가능, 노트북의 sim_df 로직)
+                val_pm25 = 10 if h < 12 else (95 if h == 15 else 15)
+                sim_row = pd.DataFrame([{'pm25': val_pm25, 'hour': h, 'day_of_week': 4, 'pm_ratio': 0.65}])
+                prob = model.predict_proba(sim_row)[0, 1]
+                
+                with status_area:
+                    if prob > 0.5: st.error(f"🚨 {h:02d}:00 위기 상황! 확률: {prob:.2f}")
+                    else: st.success(f"✅ {h:02d}:00 정상 운용 중. 확률: {prob:.2f}")
+                time.sleep(0.3)
 
 except Exception as e:
-    st.error(f"⚠️ 시스템 오류: {e}")
+    st.error(f"오류 발생: {e}")
